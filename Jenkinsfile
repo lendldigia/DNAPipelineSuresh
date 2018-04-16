@@ -95,7 +95,8 @@ node {
 		tokenView=$(curl -k -d "grant_type=password&username=admin&password=admin&scope=apim:api_view" -H "Authorization: Basic $encodeClient" https://${TARGET_ENV}:8243/token | jq -r \'.access_token\')
 
 		apisList=$(curl -k -H "Authorization: Bearer $tokenView" https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\' )
-
+	
+		echo $envt
 		newName="${API_NAME}"
 		newContext="/${API_CTX}"
 		newVersion="$envt-${API_VERSION}"
