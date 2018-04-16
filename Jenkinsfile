@@ -86,7 +86,7 @@ node {
           }
 
         if( api_action.toLowerCase().equals('update')) {	
-		sh '''echo "**********************************************       Creating clientId and cleintSecret for ADMIN"
+		sh """echo "**********************************************       Creating clientId and cleintSecret for ADMIN"
 		cid=$(curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientId\')
 		cs=$(curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientSecret\')
 
@@ -96,10 +96,10 @@ node {
 
 		apisList=$(curl -k -H "Authorization: Bearer $tokenView" https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\' )
 	
-		'echo $envt'
+		
 		newName="${API_NAME}"
 		newContext="/${API_CTX}"
-		newVersion="$envt-${API_VERSION}"
+		newVersion="${envt}-${API_VERSION}"
 		match="$(echo $apisList | jq  --arg creName "$newName" --arg creCon "$newContext" --arg creVer "$newVersion"  \'select((.name==$creName) and (.context==$creCon)  and (.version==$creVer))\')"
 
 		if [ -n "$match" ]
@@ -120,7 +120,7 @@ node {
 		echo "API is not found so update cannot be executed"
 		exit 1
 		fi
-		'''
+		"""
         }
 
         if( api_action.toLowerCase().equals('delete')) {	
