@@ -96,7 +96,7 @@ node {
 
 		apisList=$(curl -k -H "Authorization: Bearer $tokenView" https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\' )
 	
-		echo $envt
+		'echo $envt'
 		newName="${API_NAME}"
 		newContext="/${API_CTX}"
 		newVersion="$envt-${API_VERSION}"
