@@ -45,6 +45,7 @@ node {
 	def npl = new ArrayList<StringParameterValue>()
 	npl.add(new StringParameterValue('TARGET_ENV', envPublish))
 	npl.add(new StringParameterValue('API_NAME', "${API_NAME}"))
+	npl.add(new StringParameterValue('API_CTX', "${API_CTX}"))
 	npl.add(new StringParameterValue('ACTION', "${ACTION}"))
 	npl.add(new StringParameterValue('API_DESCRIPTION', "${API_DESCRIPTION}"))
 	npl.add(new StringParameterValue('API_VERSION', "${API_VERSION}"))
@@ -95,7 +96,7 @@ node {
 		apisList=$(curl -k -H "Authorization: Bearer $tokenView" https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\' )
 
 		newName="${API_NAME}"
-		newContext="${API_CTX}"
+		newContext="/${API_CTX}"
 		newVersion="${TARGET_ENV}-${API_VERSION}"
 		match="$(echo $apisList | jq  --arg creName "$newName" --arg creCon "$newContext" --arg creVer "$newVersion"  \'select((.name==$creName) and (.context==$creCon)  and (.version==$creVer))\')"
 
@@ -130,7 +131,7 @@ node {
 
 
 		newName="${API_NAME}"
-		newContext="${API_CTX}"
+		newContext="/${API_CTX}"
 		newVersion="${TARGET_ENV}-${API_VERSION}"
 		match="$(echo $apisList | jq  --arg creName "$newName" --arg creCon "$newContext" --arg creVer "$newVersion"  \'select((.name==$creName) and (.context==$creCon)  and (.version==$creVer))\')"
 		
