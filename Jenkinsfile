@@ -15,7 +15,7 @@ node {
  if(!"${ACTION}".toLowerCase().equals('delete') || ("${ACTION}".toLowerCase().equals('delete') && !file.exists())) {
         stage('CreateMetadataPhase'){     
 	String context, versionWithEnv	
-	context= "/"+"${API_NAME}"
+	context= "/"+"${API_CTX}"
 	pathToTemplate= "${WORKSPACE}" + "/ApiTemplate.json"
 	pathToApiMetadata= "${WORKSPACE}" + "/" + "${API_NAME}" + ".json"
 	versionWithEnv= "${TARGET_ENV}" + "-" + "${API_VERSION}"
@@ -94,12 +94,13 @@ node {
 
 		apisList=$(curl -k -H "Authorization: Bearer $tokenView" https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\' )
 
-		createFile=`jq \'{name: .name , context: .context , version: .version}\' ${WORKSPACE}"/${API_NAME}.json"`
-		newName="$(echo $createFile | jq -r \'.name\')"
-		newContext="$(echo $createFile | jq -r \'.context\')"
-		newVersion="$(echo $createFile | jq -r \'.version\')"
+		newName="${API_NAME}"
+		newContext="/${API_CTX}"
+		newVersion="${TARGET_ENV}-${API_VERSION}"
 		match="$(echo $apisList | jq  --arg creName "$newName" --arg creCon "$newContext" --arg creVer "$newVersion"  \'select((.name==$creName) and (.context==$creCon)  and (.version==$creVer))\')"
 
+		if [ -n "$match" ]
+		then
 		echo $match | jq \'{id: .id}\' > updateId.json
 		updateId="$(echo $match | jq -r \'.id\')"
 		echo $updateId
@@ -111,6 +112,11 @@ node {
 		echo "**********************************************       Created file UpdateAPI.json to update API"
 		curl -k -H "Authorization: Bearer $tokenCreate" -H "Content-Type: application/json" -X PUT -d @UpdateAPI.json https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis/$updateId
 		echo "**************************      UPDATE COMPLETED      ******************************"
+		
+		else
+		echo "API is not found so update cannot be executed"
+		exit 1
+		fi
 		'''
         }
 
@@ -119,18 +125,18 @@ node {
 		cid=$(curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientId\')
 		cs=$(curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientSecret\')
 		encodeClient="$(echo -n $cid:$cs | base64)"
-		tokenCreate=$(curl -k -d "grant_type=password&username=admin&password=admin&scope=apim:api_create" -H "Authorization: Basic $encodeClient" https://${TARGET_ENV}:8243/token | jq -r \'.access_token\')
 		tokenView=$(curl -k -d "grant_type=password&username=admin&password=admin&scope=apim:api_view" -H "Authorization: Basic $encodeClient" https://${TARGET_ENV}:8243/token | jq -r \'.access_token\')
 		apisList=$(curl -k -H "Authorization: Bearer $tokenView" https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\' )
 
-		createFile=`jq \'{name: .name , context: .context , version: .version}\' ${WORKSPACE}"/${API_NAME}.json"`
-		newName="$(echo $createFile | jq -r \'.name\')"
-		newContext="$(echo $createFile | jq -r \'.context\')"
-		newVersion="$(echo $createFile | jq -r \'.version\')"
-		match="$(echo $apisList | jq  --arg creName "$newName" --arg creCon "$newContext" --arg creVer "$newVersion"  \'select((.name==$creName) and (.context==$creCon)  and (.version==$creVer))\')"
-		echo $match | jq \'{id: .id}\' > updateId.json
-		deleteId="$(echo $match | jq -r \'.id\')"
 
+		newName="${API_NAME}"
+		newContext="/${API_CTX}"
+		newVersion="${TARGET_ENV}-${API_VERSION}"
+		match="$(echo $apisList | jq  --arg creName "$newName" --arg creCon "$newContext" --arg creVer "$newVersion"  \'select((.name==$creName) and (.context==$creCon)  and (.version==$creVer))\')"
+		
+		if [ -n "$match" ]
+		then
+		deleteId="$(echo $match | jq -r \'.id\')"
 		deleteResp=$(curl -k -H "Authorization: Bearer $tokenCreate" -X DELETE https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis/$deleteId)
 		if [ -n "$deleteResp" ]
 		then
@@ -139,6 +145,11 @@ node {
 		if [ -z "$deleteResp" ]
 		then
 		echo "**********************************************       API $delApi deleted successfully"
+		fi
+		
+		else
+		echo "API is not found so delete cannot be executed"
+		exit 1
 		fi
                 '''
         }
