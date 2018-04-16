@@ -38,7 +38,7 @@ node {
   }   
         stage('APIOperationPhase'){
 	def api_action = "${ACTION}"
-	"${environ}" = "${TARGET_ENV}"
+	env.environ = "${TARGET_ENV}"
         def props = readJSON file: "${WORKSPACE}"+'/Env.json'
         def envPublish = props["${TARGET_ENV}".toLowerCase()]
         println "${API_NAME}"
@@ -99,7 +99,7 @@ node {
 		
 		newName="${API_NAME}"
 		newContext="/${API_CTX}"
-		newVersion="${environ}-${API_VERSION}"
+		newVersion="${env.environ}-${API_VERSION}"
 		match="$(echo $apisList | jq  --arg creName "$newName" --arg creCon "$newContext" --arg creVer "$newVersion"  \'select((.name==$creName) and (.context==$creCon)  and (.version==$creVer))\')"
 
 		if [ -n "$match" ]
