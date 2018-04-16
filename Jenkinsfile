@@ -130,7 +130,7 @@ node {
 
 
 		newName="${API_NAME}"
-		newContext="/${API_CTX}"
+		newContext="/"+"${API_CTX}"
 		newVersion="${TARGET_ENV}-${API_VERSION}"
 		match="$(echo $apisList | jq  --arg creName "$newName" --arg creCon "$newContext" --arg creVer "$newVersion"  \'select((.name==$creName) and (.context==$creCon)  and (.version==$creVer))\')"
 		
