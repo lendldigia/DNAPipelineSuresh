@@ -1,0 +1,49 @@
+{
+   "name": "API name",
+   "description": "1-2 sentences about the API + link to the confluence documentation",
+   "context": "/context",
+   "version": "1.0",
+   "provider": "dilpublisher",
+   "apiDefinition": "{\"paths\":{\"/*\":{\"post\":{\"parameters\":[{\"schema\":{\"type\":\"string\"},\"description\":\"SOAP request.\",\"name\":\"SOAP Request\",\"required\":true,\"in\":\"body\"},{\"description\":\"SOAPAction header for soap 1.1\",\"name\":\"SOAPAction\",\"type\":\"string\",\"required\":false,\"in\":\"header\"}],\"responses\":{\"200\":{\"description\":\"OK\"}},\"x-auth-type\":\"Application & Application User\",\"x-throttling-tier\":\"Unlimited\"}}},\"swagger\":\"2.0\",\"consumes\":[\"text/xml\",\"application/soap+xml\"],\"produces\":[\"text/xml\",\"application/soap+xml\"],\"info\":{}}",
+   "wsdlUri": "proxied wsdl url",
+   "responseCaching": "Disabled",
+   "cacheTimeout": 300,
+   "destinationStatsEnabled": false,
+   "isDefaultVersion": false,
+   "type": "HTTP",
+   "transport":    [
+      "https"
+   ],
+   "tags": [],
+   "tiers": ["Gold"],
+   "maxTps": null,
+   "visibility": "PUBLIC",
+   "visibleRoles": [],
+   "visibleTenants": [],
+   "endpointConfig": "{\"production_endpoints\":{\"url\":\"back-end endpoint\",\"endpoint_type\":\"address\",\"template_not_supported\":false},\"endpoint_type\":\"address\"}",
+   "endpointSecurity": null,
+   "gatewayEnvironments": "Production and Sandbox",
+   "sequences": [],
+   "subscriptionAvailability": null,
+   "subscriptionAvailableTenants": [],
+   "businessInformation": null,
+   "corsConfiguration":    {
+      "accessControlAllowOrigins": ["*"],
+      "accessControlAllowHeaders":       [
+         "authorization",
+         "Access-Control-Allow-Origin",
+         "Content-Type",
+         "SOAPAction"
+      ],
+      "accessControlAllowMethods":       [
+         "GET",
+         "PUT",
+         "POST",
+         "DELETE",
+         "PATCH",
+         "OPTIONS"
+      ],
+      "accessControlAllowCredentials": false,
+      "corsConfigurationEnabled": false
+   }
+}

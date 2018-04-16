@@ -1,0 +1,9 @@
+{
+    "callbackUrl": "www.google.fi",
+    "clientName": "dilpublisher",
+    "tokenScope": "Production",
+    "owner": "admin",
+    "grantType": "password refresh_token",
+    "saasApp": true
+}
+
