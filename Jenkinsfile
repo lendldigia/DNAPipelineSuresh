@@ -38,7 +38,7 @@ node {
   }   
         stage('APIOperationPhase'){
 	def api_action = "${ACTION}"
-	env.environ = "${TARGET_ENV}"
+	"${environ}" = "${TARGET_ENV}"
         def props = readJSON file: "${WORKSPACE}"+'/Env.json'
         def envPublish = props["${TARGET_ENV}".toLowerCase()]
         println "${API_NAME}"
@@ -59,7 +59,7 @@ node {
         //println "${API_DESCRIPTION}"
 
 	if( api_action.toLowerCase().equals('new')) {	
-		sh '''echo "**********************************************       Creating clientId and cleintSecret for ADMIN"
+		sh """echo "**********************************************       Creating clientId and cleintSecret for ADMIN"
 		cid=$(curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientId\')
 		cs=$(curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientSecret\')
 
@@ -82,24 +82,24 @@ node {
 		apiIdForPublish="$(echo $match | jq -r \'.id\')"
 		curl -k -H "Authorization: Bearer $tokenPublish" -X POST "https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis/change-lifecycle?apiId=$apiIdForPublish&action=Publish"
 		echo "**************************      API PUBLISHED     ******************************"
-		'''
+		"""
           }
 
         if( api_action.toLowerCase().equals('update')) {	
 		sh '''echo "**********************************************       Creating clientId and cleintSecret for ADMIN"
-		cid=curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientId\'
-		cs=curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientSecret\'
+		cid=$(curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientId\')
+		cs=$(curl -k -X POST -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "Content-Type: application/json" -d @payload.json https://${TARGET_ENV}:9443/client-registration/v0.11/register | jq -r \'.clientSecret\')
 
-		encodeClient=echo -n $cid:$cs | base64
-		tokenCreate=curl -k -d "grant_type=password&username=admin&password=admin&scope=apim:api_create" -H "Authorization: Basic $encodeClient" https://${TARGET_ENV}:8243/token | jq -r \'.access_token\'
-		tokenView=curl -k -d "grant_type=password&username=admin&password=admin&scope=apim:api_view" -H "Authorization: Basic $encodeClient" https://${TARGET_ENV}:8243/token | jq -r \'.access_token\'
+		encodeClient="$(echo -n $cid:$cs | base64)"
+		tokenCreate=$(curl -k -d "grant_type=password&username=admin&password=admin&scope=apim:api_create" -H "Authorization: Basic $encodeClient" https://${TARGET_ENV}:8243/token | jq -r \'.access_token\')
+		tokenView=$(curl -k -d "grant_type=password&username=admin&password=admin&scope=apim:api_view" -H "Authorization: Basic $encodeClient" https://${TARGET_ENV}:8243/token | jq -r \'.access_token\')
 
-		apisList=curl -k -H "Authorization: Bearer $tokenView" https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'
+		apisList=$(curl -k -H "Authorization: Bearer $tokenView" https://${TARGET_ENV}:9443/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\' )
 	
 		
 		newName="${API_NAME}"
 		newContext="/${API_CTX}"
-		newVersion="${env.environ}-${API_VERSION}"
+		newVersion="${environ}-${API_VERSION}"
 		match="$(echo $apisList | jq  --arg creName "$newName" --arg creCon "$newContext" --arg creVer "$newVersion"  \'select((.name==$creName) and (.context==$creCon)  and (.version==$creVer))\')"
 
 		if [ -n "$match" ]
