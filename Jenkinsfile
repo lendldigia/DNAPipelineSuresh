@@ -2,6 +2,7 @@ import groovy.io.FileType
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
+import hudson.model.* 
 
 node {
     stage('CheckoutPhase'){
