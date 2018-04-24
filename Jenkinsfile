@@ -11,7 +11,7 @@ node {
     } 
 
     stage('ValidateParametersPhase'){
-	if ((!"${ACTION}".toLowerCase().equals('new')) || (!"${ACTION}".toLowerCase().equals('update')) || (!"${ACTION}".toLowerCase().equals('delete'))){
+	if (!"${ACTION}".toLowerCase().equals('new') || !"${ACTION}".toLowerCase().equals('update') || !"${ACTION}".toLowerCase().equals('delete')){
 		println "Invalid Action parameter passed"
 		       sh "exit 1"		
 	} else if (("${ACTION}".toLowerCase().equals('new')) || ("${ACTION}".toLowerCase().equals('update'))){
