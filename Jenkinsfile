@@ -11,8 +11,8 @@ node {
     } 
 
     stage('ValidateParametersPhase'){
-	if (!"${ACTION}".toLowerCase().equals('new') || !"${ACTION}".toLowerCase().equals('update') || !"${ACTION}".toLowerCase().equals('delete')){
-		println "Invalid Action parameter passed"
+	if(!"${ACTION}".toLowerCase().equals('new') && !"${ACTION}".toLowerCase().equals('update') && !"${ACTION}".toLowerCase().equals('delete')){
+		println "Invalid Action parameter passed: ${ACTION}"
 		       sh "exit 1"		
 	} else if (("${ACTION}".toLowerCase().equals('new')) || ("${ACTION}".toLowerCase().equals('update'))){
 		if ((!"${API_NAME}"?.trim()) || (!"${API_CTX}"?.trim()) || (!"${API_VERSION}"?.trim()) || (!"${WSDL_LOC}"?.trim()) || (!"${ENDPOINT}"?.trim()) || (!"${TARGET_ENV}"?.trim())){
@@ -23,9 +23,7 @@ node {
 	} else ("${ACTION}".toLowerCase().equals('delete')){
 			println "Mandatory parameter missing: Name= ${API_NAME} , Context= ${API_CTX} , Version= ${API_VERSION}"
 		       sh "exit 1"
-	}
-	
-	
+	}	
     }
  
  String context = "/"+"${API_CTX}"
