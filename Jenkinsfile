@@ -4,7 +4,7 @@ import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
 import hudson.model.* 
 
-node ("bamboor4.dna.fi") {
+node {
     stage('CheckoutPhase'){
       checkout scm
     } 
