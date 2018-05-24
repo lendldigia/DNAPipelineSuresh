@@ -4,7 +4,7 @@ import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
 import hudson.model.* 
 
-node {
+node ("bamboor4.dna.fi") {
     stage('CheckoutPhase'){
       checkout scm
     } 
@@ -109,7 +109,7 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
 
        if( api_action.toLowerCase().equals('update')) {
     	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://wso2-prod.dna.fi/token | jq -r \'.access_token\'", returnStdout: true)
-              def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}:9444/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
+              def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}:9444/api/am/publisher/v0.11/apis?limit=1000 | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
 	      def formattedJson = apisList.replaceAll("\n","").replaceAll("\r", "").replaceAll("\\}\\{","\\},\\{")
               println formattedJson
 	      //def jsonProps = readJSON text: formattedJson
@@ -117,13 +117,13 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
               println  "Name is: ${name}, context is: ${context} and version is: ${versionWithEnv}"
               //println jsonProps[0].name
 	      int count = 0
-	      String contextCompare = "/${context}"
+	      //String contextCompare = "/${context}"
 	      String updateId
               while(count < jsonProps.size()) {
                    //def objAPI = readJSON text: jsonProps[count].toString()
 	           //def objAPI = new JsonSlurper().parseText(jsonProps[count].toString())
                    //if("${API_NAME}".toString().equals(objAPI.name) && context.equals(objAPI.context) && versionWithEnv.equals(objAPI.version)){
-                   if(name.equals(jsonProps[count].name) && contextCompare.equals(jsonProps[count].context) && versionWithEnv.equals(jsonProps[count].version)){
+                   if(name.equals(jsonProps[count].name) && context.equals(jsonProps[count].context) && versionWithEnv.equals(jsonProps[count].version)){
                      updateId =  jsonProps[count].id
                      break
                    }
@@ -152,7 +152,7 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
 
       if( api_action.toLowerCase().equals('delete')) {
     	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://wso2-prod.dna.fi/token | jq -r \'.access_token\'", returnStdout: true)
-              def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}:9444/api/am/publisher/v0.11/apis | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
+              def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}:9444/api/am/publisher/v0.11/apis?limit=1000 | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
 	      def formattedJson = apisList.replaceAll("\n","").replaceAll("\r", "").replaceAll("\\}\\{","\\},\\{")
 	      //def jsonProps = readJSON text: formattedJson
 	      def jsonProps = new JsonSlurper().parseText(formattedJson)
