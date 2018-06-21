@@ -14,14 +14,14 @@ node ("bamboor4.dna.fi") {
 		println "Invalid Action parameter passed: ${ACTION}"
 		       sh "exit 1"		
 	} else if (("${ACTION}".toLowerCase().equals('new')) || ("${ACTION}".toLowerCase().equals('update'))){
-		if ((!"${API_NAME}"?.trim()) || (!"${API_CTX}"?.trim()) || (!"${API_VERSION}"?.trim()) || (!"${WSDL_LOC}"?.trim()) || (!"${ENDPOINT}"?.trim()) || (!"${TARGET_ENV}"?.trim())){
-			println "Mandatory parameter missing: Name= ${API_NAME} , Context= ${API_CTX} , Version= ${API_VERSION} , WSDL= ${WSDL_LOC} , Endpoint= ${ENDPOINT} , Environment= ${TARGET_ENV}"
+		if ((!"${API_NAME}"?.trim()) || (!"${API_CTX}"?.trim()) || (!"${API_VERSION}"?.trim()) || (!"${WSDL_LOC}"?.trim()) || (!"${ENDPOINT}"?.trim()) || (!"${TARGET_ENV}"?.trim()) || (!"${SOURCE}"?.trim())){
+			println "Mandatory parameter missing: Name= ${API_NAME} , Context= ${API_CTX} , Version= ${API_VERSION} , WSDL= ${WSDL_LOC} , Endpoint= ${ENDPOINT} , Environment= ${TARGET_ENV} , Source= ${SOURCE}"
 		       sh "exit 1"
 		}
 		
 	} else if("${ACTION}".toLowerCase().equals('delete')){
-	    if ((!"${API_NAME}"?.trim()) || (!"${API_CTX}"?.trim()) || (!"${API_VERSION}"?.trim())){
-			println "Mandatory parameter missing: Name= ${API_NAME} , Context= ${API_CTX} , Version= ${API_VERSION}"
+	    if ((!"${API_NAME}"?.trim()) || (!"${API_CTX}"?.trim()) || (!"${API_VERSION}"?.trim()) || (!"${SOURCE}"?.trim())){
+			println "Mandatory parameter missing: Name= ${API_NAME} , Context= ${API_CTX} , Version= ${API_VERSION} , Source= ${SOURCE}"
 		       sh "exit 1"
 	    }
 	}
@@ -32,8 +32,8 @@ node ("bamboor4.dna.fi") {
     }
  
 //String envt = "${TARGET_ENV}".toLowerCase()
-String context = "${API_CTX}"
-String name = "${API_NAME}"
+String context = "${API_CTX}" + "-" + "${SOURCE}".toUpperCase()
+String name = "${API_NAME}" + "-" + "${SOURCE}".toUpperCase()
  
 if (!"${TARGET_ENV}".toLowerCase().equals('prod')){
   context = context + "-" + "${TARGET_ENV}".toLowerCase()
@@ -77,19 +77,22 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
 	def readEnvt = readFile "${WORKSPACE}/Env.json"
         //def envProps = new JsonSlurper().parse(new File("${WORKSPACE}"+'/Env.json'))
 	def envProps = new JsonSlurper().parseText(readEnvt)
-        //String envPublish = envProps["${TARGET_ENV}".toLowerCase()]
-		String envPublish= "wso-prod-hel-ui1.s.dnaip.fi"
+
+        
+	String envPublish = envProps["${TARGET_ENV}".toLowerCase()][0]
+        String envPublish_token = envProps["${TARGET_ENV}".toLowerCase()][1]
+
         envProps = null
-        String cid = sh(script: "curl -k -X POST -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -H \"Content-Type: application/json\" -d @payload.json https://${envPublish}:9444/client-registration/v0.11/register | jq -r \'.clientId\'",      returnStdout: true)
-        String cs  = sh(script: "curl -k -X POST -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -H \"Content-Type: application/json\" -d @payload.json https://${envPublish}:9444/client-registration/v0.11/register | jq -r \'.clientSecret\'", returnStdout: true)
+        String cid = sh(script: "curl -k -X POST -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -H \"Content-Type: application/json\" -d @payload.json https://${envPublish}/client-registration/v0.11/register | jq -r \'.clientId\'",      returnStdout: true)
+        String cs  = sh(script: "curl -k -X POST -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -H \"Content-Type: application/json\" -d @payload.json https://${envPublish}/client-registration/v0.11/register | jq -r \'.clientSecret\'", returnStdout: true)
         String cid_cs = cid.trim() + ":" + cs.trim()
         String encodeClient = cid_cs.bytes.encodeBase64().toString()
-        String tokenCreate = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_create\" -H \"Authorization: Basic ${encodeClient}\" https://wso2-prod.dna.fi/token | jq -r \'.access_token\'", returnStdout: true)
+        String tokenCreate = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_create\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)
 	String tokenCreateTrimmed = tokenCreate.trim()
 
 	if( api_action.toLowerCase().equals('new')) {	
-		//String createResponse = sh(script: "curl -k -H \"Authorization: Bearer 201888d9-7888-3dbf-a397-2e8a74a7e4e5\" -H \"Content-Type: application/json\" -X POST -d @${pathToApiMetadata} https://${envPublish}:9444/api/am/publisher/v0.11/apis", returnStdout: true)
-		String createResponse = sh(script: "curl -k -H \"Authorization: Bearer ${tokenCreateTrimmed}\" -H \"Content-Type: application/json\" -X POST -d @${pathToApiMetadata} https://${envPublish}:9444/api/am/publisher/v0.11/apis", returnStdout: true)                
+		//String createResponse = sh(script: "curl -k -H \"Authorization: Bearer 201888d9-7888-3dbf-a397-2e8a74a7e4e5\" -H \"Content-Type: application/json\" -X POST -d @${pathToApiMetadata} https://${envPublish}/api/am/publisher/v0.11/apis", returnStdout: true)
+		String createResponse = sh(script: "curl -k -H \"Authorization: Bearer ${tokenCreateTrimmed}\" -H \"Content-Type: application/json\" -X POST -d @${pathToApiMetadata} https://${envPublish}/api/am/publisher/v0.11/apis", returnStdout: true)                
 		println createResponse
 		//def createResponseObj = readJSON text: createResponse
 		def createResponseObj = new JsonSlurper().parseText(createResponse)
@@ -102,14 +105,14 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
 		       println "API creation failed."
 		       sh "exit 1"
 		   }
-		def tokenPublish = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_publish\" -H \"Authorization: Basic ${encodeClient}\" https://wso2-prod.dna.fi/token | jq -r \'.access_token\'", returnStdout: true)    
-		sh "curl -k -H \"Authorization: Bearer ${tokenPublish}\" -X POST \"https://${envPublish}:9444/api/am/publisher/v0.11/apis/change-lifecycle?apiId=${apiIDCreated}&action=Publish\""
-		//sh "curl -k -H \"Authorization: Bearer 2117669f-d2ca-388a-a030-79e4809fab34\" -X POST \"https://${envPublish}:9444/api/am/publisher/v0.11/apis/change-lifecycle?apiId=${apiIDCreated}&action=Publish\""	 
+		def tokenPublish = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_publish\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)    
+		sh "curl -k -H \"Authorization: Bearer ${tokenPublish}\" -X POST \"https://${envPublish}/api/am/publisher/v0.11/apis/change-lifecycle?apiId=${apiIDCreated}&action=Publish\""
+		//sh "curl -k -H \"Authorization: Bearer 2117669f-d2ca-388a-a030-79e4809fab34\" -X POST \"https://${envPublish}/api/am/publisher/v0.11/apis/change-lifecycle?apiId=${apiIDCreated}&action=Publish\""	 
        }
 
        if( api_action.toLowerCase().equals('update')) {
-    	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://wso2-prod.dna.fi/token | jq -r \'.access_token\'", returnStdout: true)
-              def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}:9444/api/am/publisher/v0.11/apis?limit=1000 | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
+    	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)
+              def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}/api/am/publisher/v0.11/apis?limit=1000 | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
 	      def formattedJson = apisList.replaceAll("\n","").replaceAll("\r", "").replaceAll("\\}\\{","\\},\\{")
               println formattedJson
 	      //def jsonProps = readJSON text: formattedJson
@@ -145,14 +148,14 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
 		writeFile file: pathToApiMetadata, text: updatedJSON
 	     println JsonOutput.toJson(updatedJSON)
              json = null //Fix non serialazation exception.
-	     def updateResponse = sh(script:"curl -k -H \"Authorization: Bearer ${tokenCreateTrimmed}\" -H \"Content-Type: application/json\" -X PUT -d @${pathToApiMetadata} https://${envPublish}:9444/api/am/publisher/v0.11/apis/${updateId}", returnStdout: true)
+	     def updateResponse = sh(script:"curl -k -H \"Authorization: Bearer ${tokenCreateTrimmed}\" -H \"Content-Type: application/json\" -X PUT -d @${pathToApiMetadata} https://${envPublish}/api/am/publisher/v0.11/apis/${updateId}", returnStdout: true)
              println updateResponse
              
         }
 
       if( api_action.toLowerCase().equals('delete')) {
-    	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://wso2-prod.dna.fi/token | jq -r \'.access_token\'", returnStdout: true)
-              def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}:9444/api/am/publisher/v0.11/apis?limit=1000 | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
+    	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)
+              def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}/api/am/publisher/v0.11/apis?limit=1000 | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
 	      def formattedJson = apisList.replaceAll("\n","").replaceAll("\r", "").replaceAll("\\}\\{","\\},\\{")
 	      //def jsonProps = readJSON text: formattedJson
 	      def jsonProps = new JsonSlurper().parseText(formattedJson)
@@ -173,7 +176,7 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
 		       println "Delete failed.API ID missing from WSO2."
 		       sh "exit 1"
 	      }
-            def deleteResponse = sh(script:"curl -k -H \"Authorization: Bearer ${tokenCreateTrimmed}\" -X DELETE https://${envPublish}:9444/api/am/publisher/v0.11/apis/${deleteId}", returnStdout: true)
+            def deleteResponse = sh(script:"curl -k -H \"Authorization: Bearer ${tokenCreateTrimmed}\" -X DELETE https://${envPublish}/api/am/publisher/v0.11/apis/${deleteId}", returnStdout: true)
         }
     }
 }
