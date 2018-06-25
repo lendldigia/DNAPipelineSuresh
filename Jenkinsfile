@@ -83,11 +83,11 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
         String envPublish_token = envProps["${TARGET_ENV}".toLowerCase()][1]
 
         envProps = null
-        String cid = sh(script: "curl -k -X POST -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -H \"Content-Type: application/json\" -d @payload.json https://${envPublish}/client-registration/v0.11/register | jq -r \'.clientId\'",      returnStdout: true)
-        String cs  = sh(script: "curl -k -X POST -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -H \"Content-Type: application/json\" -d @payload.json https://${envPublish}/client-registration/v0.11/register | jq -r \'.clientSecret\'", returnStdout: true)
+        String cid = sh(script: "curl -k -X POST -H \"Authorization: Basic ZGlscHVibGlzaGVyOkRndjREODJO\" -H \"Content-Type: application/json\" -d @payload.json https://${envPublish}/client-registration/v0.11/register | jq -r \'.clientId\'",      returnStdout: true)
+        String cs  = sh(script: "curl -k -X POST -H \"Authorization: Basic ZGlscHVibGlzaGVyOkRndjREODJO\" -H \"Content-Type: application/json\" -d @payload.json https://${envPublish}/client-registration/v0.11/register | jq -r \'.clientSecret\'", returnStdout: true)
         String cid_cs = cid.trim() + ":" + cs.trim()
         String encodeClient = cid_cs.bytes.encodeBase64().toString()
-        String tokenCreate = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_create\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)
+        String tokenCreate = sh(script:"curl -k -d \"grant_type=password&username=dilpublisher&password=Dgv4D82N&scope=apim:api_create\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)
 	String tokenCreateTrimmed = tokenCreate.trim()
 
 	if( api_action.toLowerCase().equals('new')) {	
@@ -105,13 +105,13 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
 		       println "API creation failed."
 		       sh "exit 1"
 		   }
-		def tokenPublish = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_publish\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)    
+		def tokenPublish = sh(script:"curl -k -d \"grant_type=password&username=dilpublisher&password=Dgv4D82N&scope=apim:api_publish\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)    
 		sh "curl -k -H \"Authorization: Bearer ${tokenPublish}\" -X POST \"https://${envPublish}/api/am/publisher/v0.11/apis/change-lifecycle?apiId=${apiIDCreated}&action=Publish\""
 		//sh "curl -k -H \"Authorization: Bearer 2117669f-d2ca-388a-a030-79e4809fab34\" -X POST \"https://${envPublish}/api/am/publisher/v0.11/apis/change-lifecycle?apiId=${apiIDCreated}&action=Publish\""	 
        }
 
        if( api_action.toLowerCase().equals('update')) {
-    	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)
+    	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=dilpublisher&password=Dgv4D82N&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)
               def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}/api/am/publisher/v0.11/apis?limit=1000 | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
 	      def formattedJson = apisList.replaceAll("\n","").replaceAll("\r", "").replaceAll("\\}\\{","\\},\\{")
               println formattedJson
@@ -154,7 +154,7 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
         }
 
       if( api_action.toLowerCase().equals('delete')) {
-    	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=admin&password=admin&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)
+    	      String tokenView = sh(script:"curl -k -d \"grant_type=password&username=dilpublisher&password=Dgv4D82N&scope=apim:api_view\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)
               def apisList = "["+sh(script:"curl -k -H \"Authorization: Bearer ${tokenView}\" https://${envPublish}/api/am/publisher/v0.11/apis?limit=1000 | jq \'.list\' | jq  \'.[] | {id: .id , name: .name , context: .context , version: .version}\'", returnStdout: true)+"]"
 	      def formattedJson = apisList.replaceAll("\n","").replaceAll("\r", "").replaceAll("\\}\\{","\\},\\{")
 	      //def jsonProps = readJSON text: formattedJson
