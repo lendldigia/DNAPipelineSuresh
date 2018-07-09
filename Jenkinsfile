@@ -107,7 +107,12 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
 		   }
 		def tokenPublish = sh(script:"curl -k -d \"grant_type=password&username=dilpublisher&password=Dgv4D82N&scope=apim:api_publish\" -H \"Authorization: Basic ${encodeClient}\" https://${envPublish_token}/token | jq -r \'.access_token\'", returnStdout: true)    
 		sh "curl -k -H \"Authorization: Bearer ${tokenPublish}\" -X POST \"https://${envPublish}/api/am/publisher/v0.11/apis/change-lifecycle?apiId=${apiIDCreated}&action=Publish\""
-		//sh "curl -k -H \"Authorization: Bearer 2117669f-d2ca-388a-a030-79e4809fab34\" -X POST \"https://${envPublish}/api/am/publisher/v0.11/apis/change-lifecycle?apiId=${apiIDCreated}&action=Publish\""	 
+		def readData = readFile "${WORKSPACE}/data.json"
+		def dataId = new JsonSlurper().parseText(readData)
+		dataId.id = ${apiIDCreated}
+		writeFile file: dataSeq, text: dataId
+		println JsonOutput.toJson(dataId)
+
        }
 
        if( api_action.toLowerCase().equals('update')) {
