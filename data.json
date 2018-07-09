@@ -1,0 +1,6 @@
+{  
+   "id":"562fbe8b-0a98-4f84-bdfd-313f2431c41f",
+   "name":"validatingXML",
+   "type":"in",
+   "config":"<sequence xmlns=\"http://ws.apache.org/ns/synapse\" name=\"validatingXML\">\n<property name=\"service_ep\" expression=\"fn:concat('http://jsonplaceholder.typicode.com/', 'posts/')\"/>\n<header name=\"To\" expression=\"get-property('service_ep')\"/>\n</sequence>\n"
+}
