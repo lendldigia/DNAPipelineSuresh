@@ -4,8 +4,8 @@ import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
 import hudson.model.* 
 
-node ("bamboor4.dna.fi") {
-    stage('CheckoutPhase'){
+node {
+   stage('CheckoutPhase'){
       checkout scm
     } 
 
@@ -109,10 +109,24 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
 		sh "curl -k -H \"Authorization: Bearer ${tokenPublish}\" -X POST \"https://${envPublish}/api/am/publisher/v0.11/apis/change-lifecycle?apiId=${apiIDCreated}&action=Publish\""
 		def readData = readFile "${WORKSPACE}/data.json"
 		def dataId = new JsonSlurper().parseText(readData)
-		dataId.id = ${apiIDCreated}
-		writeFile file: dataSeq, text: dataId
-		println JsonOutput.toJson(dataId)
-
+		dataId.id = apiIDCreated
+		println dataId
+		dataIdStr = new JsonBuilder(dataId).toPrettyString()
+		dataId = null		
+		writeFile file: "dataSeq.json", text: dataIdStr
+		String medId = sh(script: "curl -k -H \"Authorization: Bearer ${tokenCreateTrimmed}\" -H \"Content-Type: application/json\" -X POST -d @dataSeq.json https://${envPublish}/api/am/publisher/v0.11/apis/${apiIDCreated}/policies/mediation | jq -r \'.id\'", returnStdout: true)
+		def readFile = readFile pathToApiMetadata
+	    	def json = new JsonSlurper().parseText(readFile)	
+	     	json << ["id": apiIDCreated]	
+		String addSeq = '[{"name": "validatingXML","type": "in","id":"' +medId+ '","shared": true}]'
+		def sequence = new JsonSlurper().parseText(addSeq)
+		json.sequences = sequence 
+		sequence = null
+		updatedJSON = new JsonBuilder(json).toPrettyString()	
+		json=null
+		writeFile file: pathToApiMetadata, text: updatedJSON
+		def updateResponse = sh(script:"curl -k -H \"Authorization: Bearer ${tokenCreateTrimmed}\" -H \"Content-Type: application/json\" -X PUT -d @${pathToApiMetadata} https://${envPublish}/api/am/publisher/v0.11/apis/${apiIDCreated}", returnStdout: true)
+        	println updateResponse
        }
 
        if( api_action.toLowerCase().equals('update')) {
@@ -185,4 +199,5 @@ if(!"${ACTION}".toLowerCase().equals('delete')) {
         }
     }
 }
+
 
